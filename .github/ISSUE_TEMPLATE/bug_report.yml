@@ -1,5 +1,6 @@
 name: "🐞 Bug Report"
 title: "[BUG] <short description>"
+description: "Report a reproducible bug in this project"
 labels: ["bug", "needs-triage"]
 assignees: []
 
