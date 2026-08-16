@@ -3,6 +3,8 @@ package com.shreeram.balloonpop
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.shreeram.balloonpop.settings.BackgroundMode
 import com.shreeram.balloonpop.settings.OrientationMode
 import com.shreeram.balloonpop.settings.ThemeMode
@@ -57,6 +59,21 @@ class DataStoreManagerTest {
     }
 
     @Test
+    fun `test invalid persisted enum values fall back to defaults`() = runTest(testDispatcher) {
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey("theme_mode")] = "INVALID"
+            preferences[stringPreferencesKey("orientation_mode")] = "SIDEWAYS"
+            preferences[stringPreferencesKey("background_mode")] = "VIDEO"
+        }
+
+        val settings = manager.settings.first()
+
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(OrientationMode.SYSTEM, settings.orientationMode)
+        assertEquals(BackgroundMode.DEFAULT, settings.backgroundMode)
+    }
+
+    @Test
     fun `test profile id persistence`() = runTest(testDispatcher) {
         manager.setCurrentProfileId("test-uuid")
         assertEquals("test-uuid", manager.currentProfileId.first())
@@ -83,5 +100,31 @@ class DataStoreManagerTest {
 
         assertNull(manager.sessionState("alice-id").first())
         assertEquals(Triple(2, 3, 5f), manager.sessionState("bob-id").first())
+    }
+
+    @Test
+    fun `test clear all removes settings profile and sessions`() = runTest(testDispatcher) {
+        manager.setCurrentProfileId("alice-id")
+        manager.updateSettings { it.copy(themeMode = ThemeMode.DARK) }
+        manager.saveSession("alice-id", 10, 4, 12f)
+
+        manager.clearAll()
+
+        assertNull(manager.currentProfileId.first())
+        assertEquals(ThemeMode.SYSTEM, manager.settings.first().themeMode)
+        assertNull(manager.sessionState("alice-id").first())
+    }
+
+    @Test
+    fun `test reset preferences preserves profile and session`() = runTest(testDispatcher) {
+        manager.setCurrentProfileId("alice-id")
+        manager.updateSettings { it.copy(themeMode = ThemeMode.DARK) }
+        manager.saveSession("alice-id", 10, 4, 12f)
+
+        manager.resetPreferences()
+
+        assertEquals("alice-id", manager.currentProfileId.first())
+        assertEquals(ThemeMode.SYSTEM, manager.settings.first().themeMode)
+        assertEquals(Triple(10, 4, 12f), manager.sessionState("alice-id").first())
     }
 }

@@ -19,8 +19,8 @@ fun DataManagementScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRoot: () -> Unit
 ) {
-    var showConfirmDelete by remember { mutableStateOf(false) }
-    var showConfirmClearLeaderboard by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<DataAction?>(null) }
+    var confirmationText by remember { mutableStateOf("") }
     val currentProfile by profileViewModel.currentProfile.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -47,13 +47,43 @@ fun DataManagementScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            Text("Dangerous Actions", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
-            Spacer(modifier = Modifier.height(32.dp))
+            Text("Data Management", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(16.dp))
 
             SpriteButton(
                 type = SpriteButtonType.BLANK_LONG,
                 text = "Clear Scores",
-                onClick = { showConfirmClearLeaderboard = true },
+                onClick = { pendingAction = DataAction.CLEAR_SCORES },
+                width = 240,
+                height = 64
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SpriteButton(
+                type = SpriteButtonType.BLANK_LONG,
+                text = "Clear Saved Game",
+                onClick = { pendingAction = DataAction.CLEAR_SESSION },
+                width = 240,
+                height = 64
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SpriteButton(
+                type = SpriteButtonType.BLANK_LONG,
+                text = "Reset Preferences",
+                onClick = { pendingAction = DataAction.RESET_PREFERENCES },
+                width = 240,
+                height = 64
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SpriteButton(
+                type = SpriteButtonType.BLANK_LONG,
+                text = "Remove Background",
+                onClick = { pendingAction = DataAction.REMOVE_BACKGROUND },
                 width = 240,
                 height = 64
             )
@@ -63,59 +93,82 @@ fun DataManagementScreen(
             SpriteButton(
                 type = SpriteButtonType.BLANK_LONG,
                 text = "Delete Profile",
-                onClick = { showConfirmDelete = true },
+                onClick = { pendingAction = DataAction.DELETE_PROFILE },
                 width = 240,
                 height = 64
             )
 
-            if (showConfirmClearLeaderboard) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SpriteButton(
+                type = SpriteButtonType.BLANK_LONG,
+                text = "Clear All App Data",
+                onClick = { pendingAction = DataAction.CLEAR_ALL },
+                width = 240,
+                height = 64
+            )
+
+            pendingAction?.let { action ->
+                val requiresTypedConfirmation = action == DataAction.DELETE_PROFILE || action == DataAction.CLEAR_ALL
+                val requiredConfirmation = currentProfile?.displayName ?: "DELETE"
                 AlertDialog(
-                    onDismissRequest = { showConfirmClearLeaderboard = false },
-                    title = { Text("Clear Leaderboard?") },
-                    text = { Text("This will permanently remove all high scores from the Hall of Fame.") },
+                    onDismissRequest = {
+                        pendingAction = null
+                        confirmationText = ""
+                    },
+                    title = { Text(action.title) },
+                    text = {
+                        Column {
+                            Text(action.description)
+                            if (requiresTypedConfirmation) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text("Type $requiredConfirmation to continue.")
+                                OutlinedTextField(
+                                    value = confirmationText,
+                                    onValueChange = { confirmationText = it },
+                                    singleLine = true
+                                )
+                            }
+                        }
+                    },
                     confirmButton = {
                         TextButton(
                             onClick = {
                                 coroutineScope.launch {
-                                    leaderboardRepository.clearAll()
-                                }
-                                showConfirmClearLeaderboard = false
-                            }
-                        ) {
-                            Text("Clear")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showConfirmClearLeaderboard = false }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
-            }
-
-            if (showConfirmDelete) {
-                AlertDialog(
-                    onDismissRequest = { showConfirmDelete = false },
-                    title = { Text("Delete Profile?") },
-                    text = { Text("This will permanently remove all your scores and settings for ${currentProfile?.displayName}.") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                currentProfile?.id?.let { id ->
-                                    coroutineScope.launch {
-                                        leaderboardRepository.deleteScoresForProfile(id)
-                                        profileViewModel.deleteProfile(id)
+                                    when (action) {
+                                        DataAction.CLEAR_SCORES -> leaderboardRepository.clearAll()
+                                        DataAction.CLEAR_SESSION -> profileViewModel.clearCurrentSession()
+                                        DataAction.RESET_PREFERENCES -> settingsViewModel.resetPreferences()
+                                        DataAction.REMOVE_BACKGROUND -> settingsViewModel.removeBackgroundImage()
+                                        DataAction.DELETE_PROFILE -> {
+                                            currentProfile?.id?.let { id ->
+                                                leaderboardRepository.deleteScoresForProfile(id)
+                                                profileViewModel.deleteProfile(id)
+                                            }
+                                            onNavigateToRoot()
+                                        }
+                                        DataAction.CLEAR_ALL -> {
+                                            leaderboardRepository.clearAll()
+                                            profileViewModel.clearAllProfiles()
+                                            settingsViewModel.clearAll()
+                                            onNavigateToRoot()
+                                        }
                                     }
                                 }
-                                showConfirmDelete = false
-                                onNavigateToRoot()
+                                pendingAction = null
+                                confirmationText = ""
                             }
+                            ,
+                            enabled = !requiresTypedConfirmation || confirmationText == requiredConfirmation
                         ) {
-                            Text("Delete")
+                            Text(action.confirmLabel)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showConfirmDelete = false }) {
+                        TextButton(onClick = {
+                            pendingAction = null
+                            confirmationText = ""
+                        }) {
                             Text("Cancel")
                         }
                     }
@@ -123,4 +176,41 @@ fun DataManagementScreen(
             }
         }
     }
+}
+
+private enum class DataAction(
+    val title: String,
+    val description: String,
+    val confirmLabel: String
+) {
+    CLEAR_SCORES(
+        "Clear leaderboard?",
+        "This permanently removes all high scores from the local Hall of Fame.",
+        "Clear"
+    ),
+    CLEAR_SESSION(
+        "Clear saved game?",
+        "This removes the current profile's saved game progress.",
+        "Clear"
+    ),
+    RESET_PREFERENCES(
+        "Reset preferences?",
+        "This restores sound, theme, orientation, and background preferences to their defaults.",
+        "Reset"
+    ),
+    REMOVE_BACKGROUND(
+        "Remove background?",
+        "This removes the selected background image and restores the default background.",
+        "Remove"
+    ),
+    DELETE_PROFILE(
+        "Delete profile?",
+        "This permanently removes the current profile, its saved game, and its leaderboard score.",
+        "Delete"
+    ),
+    CLEAR_ALL(
+        "Clear all app data?",
+        "This permanently removes all profiles, saved games, leaderboard scores, and preferences on this device.",
+        "Clear all"
+    )
 }
