@@ -48,13 +48,16 @@ class ProfileRepositoryTest {
     }
 
     @Test
-    fun `test duplicate name validation`() = runTest(testDispatcher) {
-        repository.addProfile("Alice")
-        val duplicate = repository.addProfile("alice") // case insensitive
-        assertNull("Should not allow duplicate names", duplicate)
+    fun `test resume existing profile via addProfile`() = runTest(testDispatcher) {
+        val first = repository.addProfile("Alice")
+        val second = repository.addProfile("alice") // case insensitive
 
+        assertNotNull(first)
+        assertNotNull(second)
+        assertEquals("IDs should match for resumed profile", first!!.id, second!!.id)
+        
         val profiles = repository.profiles.first()
-        assertEquals(1, profiles.size)
+        assertEquals("Should still only have 1 profile", 1, profiles.size)
     }
 
     @Test
