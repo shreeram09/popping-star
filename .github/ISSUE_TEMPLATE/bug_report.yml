@@ -78,7 +78,6 @@ body:
     attributes:
       label: Logs / Screenshots
       description: "Paste any relevant error logs or attach screenshots."
-      render: shell
     validations:
       required: false
 
