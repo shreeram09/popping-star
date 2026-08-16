@@ -1,5 +1,4 @@
 name: "🐞 Bug Report"
-about: "Report a reproducible bug in this project"
 title: "[BUG] <short description>"
 labels: ["bug", "needs-triage"]
 assignees: []
