@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LeaderboardDao {
-    @Insert
+    @Query("SELECT * FROM leaderboard WHERE profileId = :profileId LIMIT 1")
+    suspend fun getEntryForProfile(profileId: String): LeaderboardEntry?
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: LeaderboardEntry)
 
     @Query("SELECT * FROM leaderboard ORDER BY score DESC LIMIT 10")

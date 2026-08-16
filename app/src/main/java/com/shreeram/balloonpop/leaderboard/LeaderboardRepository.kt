@@ -6,7 +6,10 @@ class LeaderboardRepository(private val leaderboardDao: LeaderboardDao) {
     val topScores: Flow<List<LeaderboardEntry>> = leaderboardDao.getTopScores()
 
     suspend fun addScore(entry: LeaderboardEntry) {
-        leaderboardDao.insertEntry(entry)
+        val existingEntry = leaderboardDao.getEntryForProfile(entry.profileId)
+        if (existingEntry == null || entry.score >= existingEntry.score) {
+            leaderboardDao.insertEntry(entry)
+        }
     }
 
     suspend fun deleteScoresForProfile(profileId: String) {
