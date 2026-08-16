@@ -1,0 +1,94 @@
+name: "🐞 Bug Report"
+about: "Report a reproducible bug in this project"
+title: "[BUG] <short description>"
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for reporting a bug!
+        Please fill out the sections below so we can reproduce and fix the issue quickly.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: "Provide a short, clear summary of the bug."
+      placeholder: "Build fails on Ubuntu 22.04 with Gradle 8"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: "List the exact steps to reproduce the issue."
+      value: |
+        1.
+        2.
+        3.
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: "What did you expect to happen?"
+      placeholder: "The build should complete successfully."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: "What actually happened?"
+      placeholder: "Received error: `Could not resolve dependency xyz`"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Operating System
+      description: "Select the environment where the bug occurs."
+      options:
+        - Windows 11
+        - macOS 14 (Sonoma)
+        - Ubuntu 22.04
+        - Other (please specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "Relevant versions (Git, Node, Java, etc.)"
+      placeholder: "Git 2.43.0, Node 20.11.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots
+      description: "Paste any relevant error logs or attach screenshots."
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      description: "Please confirm before submitting."
+      options:
+        - label: I have searched existing issues
+          required: true
+        - label: I have provided sufficient information for reproduction
+          required: true
