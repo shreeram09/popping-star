@@ -40,26 +40,12 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
     }
 
     val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
-        AppSettings(
-            soundEnabled = prefs[SOUND_ENABLED] ?: true,
-            themeMode = ThemeMode.valueOf(prefs[THEME_MODE] ?: ThemeMode.SYSTEM.name),
-            orientationMode = OrientationMode.valueOf(prefs[ORIENTATION_MODE] ?: OrientationMode.SYSTEM.name),
-            backgroundMode = BackgroundMode.valueOf(prefs[BACKGROUND_MODE] ?: BackgroundMode.DEFAULT.name),
-            backgroundColor = prefs[BACKGROUND_COLOR] ?: 0xFFFFFFFF.toInt(),
-            backgroundImageUri = prefs[BACKGROUND_IMAGE_URI]
-        )
+        prefs.toAppSettings()
     }
 
     suspend fun updateSettings(update: (AppSettings) -> AppSettings) {
         dataStore.edit { prefs ->
-            val current = AppSettings(
-                soundEnabled = prefs[SOUND_ENABLED] ?: true,
-                themeMode = ThemeMode.valueOf(prefs[THEME_MODE] ?: ThemeMode.SYSTEM.name),
-                orientationMode = OrientationMode.valueOf(prefs[ORIENTATION_MODE] ?: OrientationMode.SYSTEM.name),
-                backgroundMode = BackgroundMode.valueOf(prefs[BACKGROUND_MODE] ?: BackgroundMode.DEFAULT.name),
-                backgroundColor = prefs[BACKGROUND_COLOR] ?: 0xFFFFFFFF.toInt(),
-                backgroundImageUri = prefs[BACKGROUND_IMAGE_URI]
-            )
+            val current = prefs.toAppSettings()
             val updated = update(current)
             prefs[SOUND_ENABLED] = updated.soundEnabled
             prefs[THEME_MODE] = updated.themeMode.name
@@ -87,6 +73,21 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    suspend fun resetPreferences() {
+        dataStore.edit { prefs ->
+            prefs.remove(SOUND_ENABLED)
+            prefs.remove(THEME_MODE)
+            prefs.remove(ORIENTATION_MODE)
+            prefs.remove(BACKGROUND_MODE)
+            prefs.remove(BACKGROUND_COLOR)
+            prefs.remove(BACKGROUND_IMAGE_URI)
+        }
+    }
+
+    suspend fun clearAll() {
+        dataStore.edit { it.clear() }
+    }
+
     fun sessionState(profileId: String): Flow<Triple<Int, Int, Float>?> = dataStore.data.map { prefs ->
         val score = prefs[sessionScoreKey(profileId)]
         val lives = prefs[sessionLivesKey(profileId)]
@@ -95,4 +96,16 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
             Triple(score, lives, time)
         } else null
     }
+
+    private fun Preferences.toAppSettings() = AppSettings(
+        soundEnabled = this[SOUND_ENABLED] ?: true,
+        themeMode = enumValueOrDefault(this[THEME_MODE], ThemeMode.SYSTEM),
+        orientationMode = enumValueOrDefault(this[ORIENTATION_MODE], OrientationMode.SYSTEM),
+        backgroundMode = enumValueOrDefault(this[BACKGROUND_MODE], BackgroundMode.DEFAULT),
+        backgroundColor = this[BACKGROUND_COLOR] ?: 0xFFFFFFFF.toInt(),
+        backgroundImageUri = this[BACKGROUND_IMAGE_URI]
+    )
+
+    private inline fun <reified T : Enum<T>> enumValueOrDefault(value: String?, default: T): T =
+        value?.let { runCatching { enumValueOf<T>(it) }.getOrNull() } ?: default
 }

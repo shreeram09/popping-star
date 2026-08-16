@@ -47,6 +47,21 @@ class ProfileViewModel(
         }
     }
 
+    fun clearCurrentSession() {
+        currentProfileId.value?.let { profileId ->
+            viewModelScope.launch {
+                dataStoreManager.clearSession(profileId)
+            }
+        }
+    }
+
+    fun clearAllProfiles() {
+        viewModelScope.launch {
+            dataStoreManager.setCurrentProfileId(null)
+            repository.clearAllData()
+        }
+    }
+
     fun updateScore(id: String, score: Int, duration: Float) {
         viewModelScope.launch {
             repository.updateProfileScore(id, score, duration)

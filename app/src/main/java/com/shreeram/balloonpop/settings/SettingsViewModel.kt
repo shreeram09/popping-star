@@ -62,4 +62,24 @@ class SettingsViewModel(
             }
         }
     }
+
+    fun resetPreferences() {
+        viewModelScope.launch {
+            dataStoreManager.resetPreferences()
+        }
+    }
+
+    fun removeBackgroundImage() {
+        viewModelScope.launch {
+            dataStoreManager.updateSettings {
+                it.copy(backgroundMode = BackgroundMode.DEFAULT, backgroundImageUri = null)
+            }
+        }
+    }
+
+    fun clearAll() {
+        viewModelScope.launch {
+            dataStoreManager.clearAll()
+        }
+    }
 }
