@@ -44,6 +44,20 @@ fun GameScreen(
 
     val gameState by engine.gameState.collectAsState()
 
+    // Auto-start game on first entry
+    var hasAutoStarted by remember { mutableStateOf(false) }
+    LaunchedEffect(gameState.status) {
+        if (!hasAutoStarted) {
+            if (gameState.status == GameStatus.IDLE) {
+                engine.startGame()
+                hasAutoStarted = true
+            } else if (gameState.status == GameStatus.PAUSED) {
+                engine.resumeGame()
+                hasAutoStarted = true
+            }
+        }
+    }
+
     // Pause game when navigating away
     DisposableEffect(Unit) {
         onDispose {

@@ -30,8 +30,9 @@ class ProfileRepository(private val dataStore: DataStore<Preferences>) {
         if (trimmedName.isEmpty()) return null
 
         val currentProfiles = profiles.first()
-        if (currentProfiles.any { it.displayName.equals(trimmedName, ignoreCase = true) }) {
-            return null // Duplicate name
+        val existingProfile = currentProfiles.find { it.displayName.equals(trimmedName, ignoreCase = true) }
+        if (existingProfile != null) {
+            return existingProfile
         }
 
         val newProfile = UserProfile(displayName = trimmedName)
