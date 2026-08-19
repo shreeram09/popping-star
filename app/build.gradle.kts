@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,24 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+
+// Versioning Logic
+val versionPropsFile = file("version.properties")
+val versionProps = Properties().apply {
+    if (versionPropsFile.exists()) {
+        load(versionPropsFile.inputStream())
+    }
+}
+
+val vMajor = versionProps.getProperty("VERSION_MAJOR", "1").toInt()
+val vMinor = versionProps.getProperty("VERSION_MINOR", "0").toInt()
+val vPatch = versionProps.getProperty("VERSION_PATCH", "2").toInt()
+val vBuild = versionProps.getProperty("VERSION_BUILD", "4").toInt()
+
+// CI/Automation Tags
+val appName = "PoppingStar"
+val ciBuildNumber = System.getenv("GITHUB_RUN_NUMBER") ?: "local"
+val releaseType = System.getenv("RELEASE_TYPE") ?: "alpha" // alpha, beta, prod
 
 android {
     namespace = "com.shreeram.balloonpop"
@@ -14,8 +34,12 @@ android {
         applicationId = "com.shreeram.balloonpop"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = vBuild
+        versionName = when (releaseType) {
+            "prod" -> "$vMajor.$vMinor.$vPatch"
+            "beta" -> "$appName-$vMajor.$vMinor.$vPatch-beta+$ciBuildNumber"
+            else -> "$appName-$vMajor.$vMinor.$vPatch-alpha+$ciBuildNumber"
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
