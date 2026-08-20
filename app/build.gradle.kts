@@ -29,6 +29,7 @@ val releaseType = System.getenv("RELEASE_TYPE") ?: "alpha" // alpha, beta, prod
 android {
     namespace = "com.shreeram.balloonpop"
     compileSdk = 36
+    ndkVersion = "30.0.15729638"
 
     defaultConfig {
         applicationId = "com.shreeram.balloonpop"
@@ -51,6 +52,13 @@ android {
             
             ndk {
                 debugSymbolLevel = "FULL"
+            }
+            
+            packaging {
+                jniLibs {
+                    excludes.add("**/libdatastore_shared_counter.so")
+                    excludes.add("**/libandroidx.graphics.path.so")
+                }
             }
             
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
