@@ -29,7 +29,6 @@ val releaseType = System.getenv("RELEASE_TYPE") ?: "alpha" // alpha, beta, prod
 android {
     namespace = "com.shreeram.balloonpop"
     compileSdk = 36
-    ndkVersion = "30.0.15729638"
 
     defaultConfig {
         applicationId = "com.shreeram.balloonpop"
@@ -49,10 +48,6 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            
-            ndk {
-                debugSymbolLevel = "FULL"
-            }
             
             packaging {
                 jniLibs {
@@ -77,6 +72,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.material)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

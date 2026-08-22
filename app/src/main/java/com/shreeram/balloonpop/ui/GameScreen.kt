@@ -179,7 +179,6 @@ fun GameScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
