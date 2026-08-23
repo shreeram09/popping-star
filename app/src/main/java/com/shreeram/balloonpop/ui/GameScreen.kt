@@ -3,6 +3,7 @@ package com.shreeram.balloonpop.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -103,53 +104,90 @@ fun GameScreen(
                 .statusBarsPadding()
         ) {
             // Top HUD Row
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                shape = MaterialTheme.shapes.large
             ) {
-                // Best Score
-                Column(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
                 ) {
-                    Text(text = "BEST", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text(
-                        text = "${maxOf(currentProfile?.bestScore ?: 0, gameState.score)}",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                    // Best Score (Center)
+                    Column(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "BEST",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${maxOf(currentProfile?.bestScore ?: 0, gameState.score)}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
 
-                // Score & Lives
-                Column(modifier = Modifier.align(Alignment.TopStart)) {
-                    Text(text = "SCORE", style = MaterialTheme.typography.labelSmall)
-                    Text(text = "${gameState.score}", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "LIVES: ${gameState.lives}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (gameState.lives <= 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                    // Score & Hearts (Start)
+                    Column(modifier = Modifier.align(Alignment.TopStart)) {
+                        Text(
+                            text = "SCORE",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${gameState.score}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row {
+                            repeat(gameState.lives) { index ->
+                                Icon(
+                                    imageVector = Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = if (index < gameState.lives) {
+                                        MaterialTheme.colorScheme.error
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                                    },
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                if (index < 2) Spacer(modifier = Modifier.width(2.dp))
+                            }
+                        }
+                    }
 
-                // Controls
-                Row(modifier = Modifier.align(Alignment.TopEnd), verticalAlignment = Alignment.CenterVertically) {
-                    SpriteButton(
-                        type = SpriteButtonType.CIRCLE_LEADERBOARD,
-                        iconVector = Icons.Default.Leaderboard,
-                        onClick = onNavigateToLeaderboard,
-                        width = 44,
-                        height = 44
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    SpriteButton(
-                        type = SpriteButtonType.CIRCLE_GEAR,
-                        iconVector = Icons.Default.Settings,
-                        onClick = onNavigateToSettings,
-                        width = 44,
-                        height = 44
-                    )
+                    // Controls (End)
+                    Row(
+                        modifier = Modifier.align(Alignment.TopEnd),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SpriteButton(
+                            type = SpriteButtonType.CIRCLE_LEADERBOARD,
+                            iconVector = Icons.Default.Leaderboard,
+                            onClick = onNavigateToLeaderboard,
+                            width = 40,
+                            height = 40
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        SpriteButton(
+                            type = SpriteButtonType.CIRCLE_GEAR,
+                            iconVector = Icons.Default.Settings,
+                            onClick = onNavigateToSettings,
+                            width = 40,
+                            height = 40
+                        )
+                    }
                 }
             }
 
